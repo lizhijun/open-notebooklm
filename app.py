@@ -16,6 +16,10 @@ import random
 from loguru import logger
 from pypdf import PdfReader
 from pydub import AudioSegment
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import urllib3
 
 # Local imports
 from constants import (
@@ -52,6 +56,93 @@ from schema import ShortDialogue, MediumDialogue
 from utils import generate_podcast_audio, generate_script, parse_url
 
 
+def check_ffmpeg_installation():
+    """检查 ffmpeg 是否已安装且可用"""
+    try:
+        import subprocess
+        import platform
+        
+        # 获取操作系统信息
+        os_name = platform.system().lower()
+        
+        try:
+            # 检查 ffmpeg 是否可用
+            result = subprocess.run(['ffmpeg', '-version'], 
+                                  capture_output=True, 
+                                  text=True, 
+                                  check=True)
+            logger.info(f"ffmpeg found: {result.stdout.split('\\n')[0]}")
+            return
+        except FileNotFoundError:
+            # 根据操作系统提供具体的安装建议
+            if os_name == 'darwin':  # MacOS
+                error_message = """
+ffmpeg 未找到。请按以下步骤安装：
+
+1. 确保已安装 Homebrew：
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+2. 安装 ffmpeg：
+   brew install ffmpeg
+
+如果已安装但仍然出错，请尝试：
+   brew update
+   brew upgrade ffmpeg
+
+或重新安装：
+   brew uninstall ffmpeg
+   brew install ffmpeg
+
+安装后，请重新启动终端并再次运行程序。
+"""
+            else:
+                error_message = "请先安装 ffmpeg。\n在 Ubuntu/Debian 上运行: sudo apt-get install ffmpeg\n在 MacOS 上运行: brew install ffmpeg\n在 Windows 上请下载并安装 ffmpeg。"
+            
+            raise gr.Error(error_message)
+            
+    except Exception as e:
+        logger.error(f"检查 ffmpeg 时发生错误: {str(e)}")
+        raise gr.Error(f"检查 ffmpeg 安装时发生错误: {str(e)}")
+
+
+def create_robust_session():
+    """创建一个具有重试机制的请求会话"""
+    session = requests.Session()
+    
+    # 配置重试策略
+    retry_strategy = Retry(
+        total=3,  # 最大重试次数
+        backoff_factor=1,  # 重试之间的延迟时间
+        status_forcelist=[500, 502, 503, 504],  # 需要重试的HTTP状态码
+        allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"]
+    )
+    
+    # 配置适配器
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    
+    return session
+
+
+def parse_url(url: str) -> str:
+    """Parse the given URL and return the text content."""
+    try:
+        session = create_robust_session()
+        for attempt in range(3):  # 最多尝试3次
+            try:
+                full_url = f"{JINA_READER_URL}{url}"
+                response = session.get(full_url, timeout=60)
+                response.raise_for_status()
+                return response.text
+            except (requests.RequestException, urllib3.exceptions.ProtocolError) as e:
+                if attempt == 2:  # 最后一次尝试
+                    raise ValueError(f"无法获取URL内容: {str(e)}")
+                time.sleep(2 ** attempt)  # 指数退避
+    except Exception as e:
+        raise ValueError(f"处理URL时出错: {str(e)}")
+
+
 def generate_podcast(
     files: List[str],
     url: Optional[str],
@@ -62,6 +153,8 @@ def generate_podcast(
     use_advanced_audio: bool,
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
+
+    check_ffmpeg_installation()
 
     text = ""
 

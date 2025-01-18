@@ -29,23 +29,42 @@ Built with:
 - **Engaging Dialogue:** The generated dialogue is designed to be informative and entertaining.
 - **User-friendly Interface:** Simple interface using Gradio for easy interaction.
 
-## Installation
+## 前置要求
 
-To set up the project, follow these steps:
+在运行项目之前，请确保安装以下依赖：
 
-1. **Clone the repository:**
+1. **Python 3.12+**
+
+2. **ffmpeg** - 用于音频处理
+   ```bash
+   # MacOS
+   brew install ffmpeg
+   
+   # Ubuntu/Debian
+   sudo apt-get update
+   sudo apt-get install ffmpeg
+   
+   # Windows
+   # 从 https://www.ffmpeg.org/download.html 下载并安装
+   ```
+
+## 安装步骤
+
+1. **克隆仓库:**
    ```bash
    git clone https://github.com/gabrielchua/open-notebooklm.git
    cd open-notebooklm
    ```
 
-2. **Create a virtual environment and activate it:**
+2. **创建虚拟环境并激活:**
    ```bash
    python -m venv .venv
-   source .venv/bin/activate
+   source .venv/bin/activate  # MacOS/Linux
+   # 或
+   .venv\Scripts\activate  # Windows
    ```
 
-3. **Install the required packages:**
+3. **安装依赖包:**
    ```bash
    pip install -r requirements.txt
    ```
