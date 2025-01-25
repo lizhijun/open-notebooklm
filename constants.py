@@ -21,11 +21,19 @@ ERROR_MESSAGE_NOT_SUPPORTED_IN_MELO_TTS = "The selected language is not supporte
 ERROR_MESSAGE_READING_PDF = "Error reading the PDF file"
 ERROR_MESSAGE_TOO_LONG = "The total content is too long. Please ensure the combined text from PDFs and URL is fewer than {CHARACTER_LIMIT} characters."
 
-# Fireworks API-related constants
-FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
-FIREWORKS_MAX_TOKENS = 16_384
-FIREWORKS_MODEL_ID = "accounts/fireworks/models/llama-v3p3-70b-instruct"
-FIREWORKS_TEMPERATURE = 0.1
+# API 调用相关常量
+API_TIMEOUT = 30.0
+API_MAX_RETRIES = 3
+API_RETRY_DELAY = 1
+API_RETRY_MAX_DELAY = 10
+API_SSL_VERIFY = True  # 添加 SSL 验证选项
+
+# DeepSeek API-related constants
+DEEPSEEK_API_KEY = "sk-5ba9904ce4de42c3882f009f00487b43"
+DEEPSEEK_MAX_TOKENS = 4096
+DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_TEMPERATURE = 0.1
+DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 # MeloTTS
 MELO_API_NAME = "/synthesize"
@@ -34,7 +42,8 @@ MELO_RETRY_ATTEMPTS = 3
 MELO_RETRY_DELAY = 5  # in seconds
 
 MELO_TTS_LANGUAGE_MAPPING = {
-    "en": "EN",
+    "zh": "myshell-ai/MeloTTS-Chinese",
+    "en": "myshell-ai/MeloTTS-English",
     "es": "ES",
     "fr": "FR",
     "zh": "ZJ",
@@ -45,8 +54,9 @@ MELO_TTS_LANGUAGE_MAPPING = {
 
 # Suno related constants
 SUNO_LANGUAGE_MAPPING = {
-    "English": "en",
+    "中文": "zh",
     "Chinese": "zh",
+    "English": "en",
     "French": "fr",
     "German": "de",
     "Hindi": "hi",
@@ -88,27 +98,27 @@ Built with:
 UI_AVAILABLE_LANGUAGES = list(set(SUNO_LANGUAGE_MAPPING.keys()))
 UI_INPUTS = {
     "file_upload": {
-        "label": "1. 📄 Upload your PDF(s)",
+        "label": "1. 📄 上传 PDF 文件",
         "file_types": [".pdf"],
         "file_count": "multiple",
     },
     "url": {
-        "label": "2. 🔗 Paste a URL (optional)",
-        "placeholder": "Enter a URL to include its content",
+        "label": "2. 🔗 输入网址（可选）",
+        "placeholder": "输入要处理的网页地址",
     },
     "question": {
-        "label": "3. 🤔 Do you have a specific question or topic in mind?",
-        "placeholder": "Enter a question or topic",
+        "label": "3. 🤔 有什么具体问题或主题吗？",
+        "placeholder": "输入您感兴趣的问题或主题",
     },
     "tone": {
-        "label": "4. 🎭 Choose the tone",
-        "choices": ["Fun", "Formal"],
-        "value": "Fun",
+        "label": "4. 🎭 选择语气",
+        "choices": ["轻松", "正式", "Fun"],
+        "value": "轻松",
     },
     "length": {
-        "label": "5. ⏱️ Choose the length",
-        "choices": ["Short (1-2 min)", "Medium (3-5 min)"],
-        "value": "Medium (3-5 min)",
+        "label": "5. ⏱️ 选择长度",
+        "choices": ["短篇 (1-2分钟)", "中篇 (3-5分钟)", "Short (1-2 min)"],
+        "value": "中篇 (3-5分钟)",
     },
     "language": {
         "label": "6. 🌐 Choose the language",
@@ -128,6 +138,7 @@ UI_OUTPUTS = {
 }
 UI_API_NAME = "generate_podcast"
 UI_ALLOW_FLAGGING = "never"
+UI_FLAGGING_MODE = "never"
 UI_CONCURRENCY_LIMIT = 1
 UI_EXAMPLES = [
     [

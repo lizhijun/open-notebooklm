@@ -93,3 +93,17 @@ This project is forked from [`knowsuchagency/pdf-to-podcast`](https://github.com
 ## License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for more information.
+
+## 配置 API
+
+1. **设置 DeepSeek API Key:**
+   ```bash
+   export DEEPSEEK_API_KEY=your-api-key
+   ```
+   或者在项目根目录创建 `.env` 文件:
+   ```
+   DEEPSEEK_API_KEY=your-api-key
+   ```
+
+2. **模型说明:**
+   本项目使用 DeepSeek Chat 模型进行对话生成，支持中文对话生成和多语言输出。
